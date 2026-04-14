@@ -9,7 +9,6 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,9 +16,6 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-
-    @Value("${server.port:8080}")
-    private String serverPort;
 
     private static final String SECURITY_SCHEME_NAME = "BearerAuth";
 
@@ -29,55 +25,39 @@ public class SwaggerConfig {
                 .info(apiInfo())
                 .externalDocs(externalDocs())
                 .servers(List.of(
-                        new Server().url("http://localhost:" + serverPort).description("Local Development"),
-                        new Server().url("https://your-backend.railway.app").description("Production")
+                        new Server()
+                                .url("https://hk-pg-backend.onrender.com")
+                                .description("Production Server")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME,
                                 new SecurityScheme()
-                                        .name(SECURITY_SCHEME_NAME)
+                                        .name("Authorization")
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description(
-                                                "Obtain a JWT token from **POST /api/auth/login**, " +
-                                                "then paste it here. The 'Bearer ' prefix is added automatically."
-                                        )
                         )
                 );
     }
 
     private Info apiInfo() {
         return new Info()
-                .title("HK PG — Boys Accommodation API")
-                .version("1.0.0")
-                .description(
-                        "## HK PG Backend REST API\n\n" +
-                        "Production REST API for **HK PG Boys Accommodation**, Akurdi, Pune.\n\n" +
-                        "### How to authenticate\n" +
-                        "1. Register a new account via `POST /api/auth/register`\n" +
-                        "2. Or login via `POST /api/auth/login`\n" +
-                        "3. Copy the `token` from the response\n" +
-                        "4. Click **Authorize 🔒** above and paste the token\n\n" +
-                        "### Roles\n" +
-                        "- **STUDENT** — can submit applications, view own applications\n" +
-                        "- **ADMIN** — full access including dashboard and application management"
-                )
+                .title("HK PG API")
+                .version("1.0")
+                .description("Backend API for HK PG Application")
                 .contact(new Contact()
                         .name("HK PG")
                         .email("admin@hkpg.com")
-                        .url("https://hkpg.vercel.app")
                 )
                 .license(new License()
-                        .name("Private — All Rights Reserved")
-                        .url("https://hkpg.vercel.app")
+                        .name("Private")
                 );
     }
 
     private ExternalDocumentation externalDocs() {
         return new ExternalDocumentation()
-                .description("HK PG Website")
+                .description("Frontend Website")
                 .url("https://hkpg.vercel.app");
     }
 }

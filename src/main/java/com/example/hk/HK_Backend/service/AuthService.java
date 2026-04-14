@@ -65,14 +65,25 @@ public class AuthService {
         return toAuthResponse(user, token);
     }
 
-    // 🔥 ADD THIS METHOD (ONLY CHANGE)
+    
+    
     public void updateAdminPassword(String email, String newPassword) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
+    User user = userRepository.findByEmail(email).orElse(null);
 
+    if (user == null) {
+        user = User.builder()
+                .name("Admin")
+                .email(email)
+                .password(passwordEncoder.encode(newPassword))
+                .role(Role.ADMIN)
+                .active(true)
+                .build();
+    } else {
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
     }
+
+    userRepository.save(user);
+}
 
     // ── Helper ────────────────────────────────────────────────────────────────
     private AuthResponse toAuthResponse(User user, String token) {

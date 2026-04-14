@@ -1,7 +1,6 @@
 package com.example.hk.HK_Backend.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,9 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -33,9 +30,6 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
-
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -59,41 +53,51 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+
+            // ✅ VERY IMPORTANT
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
             .authorizeHttpRequests(auth -> auth
-                // Swagger UI & API docs — public
+                // Swagger
                 .requestMatchers(
-                    "/swagger-ui.html", "/swagger-ui/**",
-                    "/api-docs/**", "/api-docs.yaml", "/v3/api-docs/**"
+                        "/swagger-ui.html", "/swagger-ui/**",
+                        "/api-docs/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Auth — public
+
+                // Auth
                 .requestMatchers("/api/auth/**").permitAll()
-                // Rooms — public read
+
+                // Rooms public
                 .requestMatchers(HttpMethod.GET, "/api/room-types/**").permitAll()
-                // Application submit — requires login (students must be registered)
+
+                // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()
-                // Static uploads — public
-                .requestMatchers("/uploads/**").permitAll()
-                // Admin only
+
+                // Admin
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // Everything else — authenticated
+
+                // Everything else
                 .anyRequest().authenticated()
             )
+
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ✅ HARDCODED CORS (NO ENV ISSUE)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-        config.setAllowedOrigins(origins);
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://hk-pg-frontend.vercel.app"
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));

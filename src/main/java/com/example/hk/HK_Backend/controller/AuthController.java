@@ -5,11 +5,6 @@ import com.example.hk.HK_Backend.dto.AuthResponse;
 import com.example.hk.HK_Backend.dto.LoginRequest;
 import com.example.hk.HK_Backend.dto.RegisterRequest;
 import com.example.hk.HK_Backend.service.AuthService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,8 +36,8 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Login successful", authService.login(request)));
     }
 
-    //  TEMP API (FOR PASSWORD FIX ONLY)
-    @PostMapping("/fix-admin-password")
+    //  TEMP FIX ENDPOINT
+    @GetMapping("/fix-admin-password")
     public String fixAdminPassword() {
         authService.updateAdminPassword("admin@hkpg.com", "Harekrishna@99");
         return "Admin password updated";

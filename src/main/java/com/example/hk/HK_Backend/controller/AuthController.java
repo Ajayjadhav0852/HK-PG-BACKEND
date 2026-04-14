@@ -36,10 +36,4 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Login successful", authService.login(request)));
     }
 
-    //  TEMP FIX ENDPOINT
-    @GetMapping("/fix-admin-password")
-    public String fixAdminPassword() {
-        authService.updateAdminPassword("admin@hkpg.com", "Harekrishna@99");
-        return "Admin password updated";
     }
-}

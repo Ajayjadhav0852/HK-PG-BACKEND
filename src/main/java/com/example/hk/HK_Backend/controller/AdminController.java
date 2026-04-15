@@ -190,4 +190,16 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok("Password changed successfully", null));
     }
 
+    @Operation(
+        summary = "Reset admin password to default (Emergency use only)",
+        description = "Resets admin password to 'admin123'. Use only if locked out. " +
+                      "This endpoint will be removed in production."
+    )
+    @PostMapping("/reset-admin-password")
+    @PreAuthorize("permitAll()")  // Allow without authentication for emergency access
+    public ResponseEntity<ApiResponse<Void>> resetAdminPassword() {
+        authService.updateAdminPassword("admin@hkpg.com", "admin123");
+        return ResponseEntity.ok(ApiResponse.ok("Admin password reset to 'admin123'", null));
+    }
+
 }

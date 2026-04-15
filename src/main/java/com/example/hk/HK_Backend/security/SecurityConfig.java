@@ -75,6 +75,9 @@ public class SecurityConfig {
                 // Health check — keep-alive ping, no auth needed
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
+                // Emergency admin password reset (remove in production)
+                .requestMatchers(HttpMethod.POST, "/api/admin/reset-admin-password").permitAll()
+
                 // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()
 

@@ -3,6 +3,7 @@ package com.example.hk.HK_Backend.controller;
 import com.example.hk.HK_Backend.dto.*;
 import com.example.hk.HK_Backend.service.AdminService;
 import com.example.hk.HK_Backend.service.ApplicationService;
+import com.example.hk.HK_Backend.service.AuthService;
 import com.example.hk.HK_Backend.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +38,7 @@ public class AdminController {
     private final AdminService adminService;
     private final ApplicationService applicationService;
     private final RoomService roomService;
+    private final AuthService authService;
 
     @Operation(
         summary = "Get dashboard statistics",
@@ -153,6 +156,38 @@ public class AdminController {
             @PathVariable Long id) {
         applicationService.deleteApplication(id);
         return ResponseEntity.ok(ApiResponse.ok("Application deleted successfully", null));
+    }
+
+    @Operation(
+        summary = "Change admin password",
+        description = "Allows the admin to securely change their password. " +
+                      "Requires current password verification for security."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Password changed successfully"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Invalid current password or password validation failed"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403", description = "Access denied — Admin role required"
+        )
+    })
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+        
+        String adminEmail = authentication.getName();
+        authService.changePassword(
+            adminEmail, 
+            request.getCurrentPassword(), 
+            request.getNewPassword(), 
+            request.getConfirmPassword()
+        );
+        
+        return ResponseEntity.ok(ApiResponse.ok("Password changed successfully", null));
     }
 
 }

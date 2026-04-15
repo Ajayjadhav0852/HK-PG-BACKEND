@@ -67,6 +67,32 @@ public class AuthService {
 
     
     
+    @Transactional
+    public void changePassword(String userEmail, String currentPassword, String newPassword, String confirmPassword) {
+        // Validate passwords match
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BadRequestException("New password and confirmation do not match");
+        }
+
+        // Find user
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Don't allow same password
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     public void updateAdminPassword(String email, String newPassword) {
     User user = userRepository.findByEmail(email).orElse(null);
 

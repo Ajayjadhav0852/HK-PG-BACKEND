@@ -14,9 +14,10 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:5173", // local frontend
-                                "https://hk-pg-frontend.vercel.app" // your deployed frontend (optional)
+                        .allowedOriginPatterns(
+                                "http://localhost:5173",
+                                "https://hk-pg-frontend.vercel.app",
+                                "https://hk-pg-frontend-*.vercel.app" // allow all preview deployments
                         )
                         .allowedMethods("*")
                         .allowedHeaders("*")

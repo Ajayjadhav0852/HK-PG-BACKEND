@@ -72,6 +72,9 @@ public class SecurityConfig {
                 // Rooms public
                 .requestMatchers(HttpMethod.GET, "/api/room-types/**").permitAll()
 
+                // Health check — keep-alive ping, no auth needed
+                .requestMatchers(HttpMethod.GET, "/health").permitAll()
+
                 // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()
 

@@ -91,14 +91,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ HARDCODED CORS (NO ENV ISSUE)
+    // ✅ FLEXIBLE CORS - SUPPORTS ALL VERCEL DEPLOYMENTS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://hk-pg-frontend.vercel.app"
+        // Use allowedOriginPatterns for wildcard support
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "https://hk-pg-frontend.vercel.app",
+                "https://hk-pg-frontend-*.vercel.app",  // Preview deployments
+                "https://*.vercel.app"                   // Any Vercel domain
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

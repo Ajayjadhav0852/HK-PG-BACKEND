@@ -33,4 +33,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     /** Check if a user already has a pending/confirmed application for a room type */
     @Query("SELECT COUNT(a) > 0 FROM Application a WHERE a.user = :user AND a.roomType.slug = :slug AND a.status IN ('PENDING', 'CONFIRMED')")
     boolean hasActiveApplicationForType(@Param("user") User user, @Param("slug") String slug);
+
+    /** Check if a specific bed in a room is already booked (PENDING or CONFIRMED) */
+    boolean existsByRoomAndBedNumberAndStatusNot(Room room, Integer bedNumber, ApplicationStatus status);
 }

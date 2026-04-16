@@ -76,6 +76,21 @@ public class ApplicationService {
                         "Room " + assignedRoom.getRoomNumber() + " is fully occupied. Please choose a different room.");
             }
 
+            // ── DUPLICATE BED CHECK ───────────────────────────────────────────
+            // Prevent same bed from being booked twice (PENDING or CONFIRMED)
+            if (req.getSelectedBedNumber() != null) {
+                boolean bedAlreadyBooked = applicationRepository
+                        .existsByRoomAndBedNumberAndStatusNot(
+                                assignedRoom,
+                                req.getSelectedBedNumber(),
+                                ApplicationStatus.REJECTED);
+                if (bedAlreadyBooked) {
+                    throw new BadRequestException(
+                            "Bed " + req.getSelectedBedNumber() + " in Room " + assignedRoom.getRoomNumber() +
+                            " is already booked. Please select a different bed.");
+                }
+            }
+
             // Validate bed number is within this room's range
             if (req.getSelectedBedNumber() != null) {
                 int bedStart = assignedRoom.getBedStart();

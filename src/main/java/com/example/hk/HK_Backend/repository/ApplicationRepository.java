@@ -36,4 +36,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     /** Check if a specific bed in a room is already booked (PENDING or CONFIRMED) */
     boolean existsByRoomAndBedNumberAndStatusNot(Room room, Integer bedNumber, ApplicationStatus status);
+
+    /** Get all booked bed numbers for a room (PENDING + CONFIRMED) — used to block beds in booking form */
+    @Query("SELECT a.bedNumber FROM Application a WHERE a.room = :room AND a.status != 'REJECTED' AND a.bedNumber IS NOT NULL")
+    List<Integer> findBookedBedNumbers(@Param("room") Room room);
 }

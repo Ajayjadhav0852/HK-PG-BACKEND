@@ -3,6 +3,9 @@ package com.example.hk.HK_Backend.controller;
 import com.example.hk.HK_Backend.dto.ApiResponse;
 import com.example.hk.HK_Backend.dto.RoomDto;
 import com.example.hk.HK_Backend.dto.RoomTypeDto;
+import com.example.hk.HK_Backend.entity.ApplicationStatus;
+import com.example.hk.HK_Backend.repository.ApplicationRepository;
+import com.example.hk.HK_Backend.repository.RoomRepository;
 import com.example.hk.HK_Backend.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +31,8 @@ import java.util.List;
 public class RoomController {
 
     private final RoomService roomService;
+    private final ApplicationRepository applicationRepository;
+    private final RoomRepository roomRepository;
 
     @Operation(summary = "Get all room types with live vacancy stats")
     @GetMapping
@@ -52,5 +57,20 @@ public class RoomController {
             @Parameter(description = "Room type slug", example = "3-sharing")
             @PathVariable String slug) {
         return ResponseEntity.ok(ApiResponse.ok(roomService.getRoomTypeBySlug(slug)));
+    }
+
+    @Operation(
+        summary = "Get booked bed numbers for a room (PENDING + CONFIRMED)",
+        description = "Returns list of bed numbers that are already booked (PENDING or CONFIRMED). " +
+                      "Frontend uses this to disable those beds in the booking form dropdown."
+    )
+    @GetMapping("/booked-beds/{roomNumber}")
+    public ResponseEntity<ApiResponse<List<Integer>>> getBookedBeds(
+            @Parameter(description = "Room number e.g. R2", example = "R2")
+            @PathVariable String roomNumber) {
+        List<Integer> bookedBeds = roomRepository.findByRoomNumber(roomNumber)
+                .map(room -> applicationRepository.findBookedBedNumbers(room))
+                .orElse(List.of());
+        return ResponseEntity.ok(ApiResponse.ok(bookedBeds));
     }
 }

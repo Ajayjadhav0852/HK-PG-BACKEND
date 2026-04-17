@@ -27,6 +27,7 @@ public class ApplicationService {
     private final RoomTypeRepository    roomTypeRepository;
     private final RoomRepository        roomRepository;
     private final UserRepository        userRepository;
+    private final EmailService          emailService;
 
     /**
      * Submit a new application.
@@ -155,7 +156,12 @@ public class ApplicationService {
 
         applicationRepository.save(app);
         log.info("Application submitted (PENDING): {} → {} (Bed {})", req.getFullName(), finalRoom.getRoomNumber(), req.getSelectedBedNumber());
-        return toResponse(app);
+        
+        ApplicationResponse response = toResponse(app);
+        // Send email to admin (async — doesn't block response)
+        emailService.sendNewBookingToAdmin(response);
+        
+        return response;
     }
 
     /**
@@ -219,7 +225,13 @@ public class ApplicationService {
         app.setStatus(newStatus);
         app.setAdminNotes(req.getAdminNotes());
         applicationRepository.save(app);
-        return toResponse(app);
+        
+        ApplicationResponse response = toResponse(app);
+        // Send confirmation email to student when admin confirms (async)
+        if (newStatus == ApplicationStatus.CONFIRMED) {
+            emailService.sendConfirmationToStudent(response);
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)

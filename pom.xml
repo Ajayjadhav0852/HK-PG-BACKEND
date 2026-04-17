@@ -88,6 +88,12 @@
 			<version>1.38.0</version>
 		</dependency>
 
+		<!-- Email — JavaMailSender for Gmail SMTP -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>

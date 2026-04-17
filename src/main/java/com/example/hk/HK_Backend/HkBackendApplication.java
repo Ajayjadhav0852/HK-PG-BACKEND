@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.math.BigDecimal;
 
 @SpringBootApplication
+@org.springframework.scheduling.annotation.EnableAsync
 public class HkBackendApplication {
 
     public static void main(String[] args) {

@@ -36,4 +36,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Login successful", authService.login(request)));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(
+            @RequestBody java.util.Map<String, String> body) {
+        String token = body.get("token");
+        if (token == null || token.isBlank()) {
+            throw new com.example.hk.HK_Backend.exception.BadRequestException("Google token is required");
+        }
+        return ResponseEntity.ok(ApiResponse.ok("Google login successful", authService.googleLogin(token)));
+    }
+
     }

@@ -8,6 +8,8 @@ import com.example.hk.HK_Backend.entity.User;
 import com.example.hk.HK_Backend.exception.BadRequestException;
 import com.example.hk.HK_Backend.repository.UserRepository;
 import com.example.hk.HK_Backend.security.JwtUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +70,66 @@ public class AuthService {
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
         return toAuthResponse(user, token);
+    }
+
+    // ── Google OAuth Login ────────────────────────────────────────────────────
+    @Transactional
+    public AuthResponse googleLogin(String googleToken) {
+        try {
+            // Verify Google token by calling Google's tokeninfo endpoint
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("https://oauth2.googleapis.com/tokeninfo?id_token=" + googleToken))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new BadRequestException("Invalid Google token");
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(response.body());
+
+            String email = json.get("email").asText();
+            String name  = json.has("name") ? json.get("name").asText() : email.split("@")[0];
+            String picture = json.has("picture") ? json.get("picture").asText() : null;
+
+            // Find or create user
+            User user = userRepository.findByEmail(email).orElseGet(() -> {
+                User newUser = User.builder()
+                        .name(name)
+                        .email(email)
+                        .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                        .role(Role.STUDENT)
+                        .profilePhotoUrl(picture)
+                        .active(true)
+                        .build();
+                return userRepository.save(newUser);
+            });
+
+            // Update profile photo if changed
+            if (picture != null && !picture.equals(user.getProfilePhotoUrl())) {
+                user.setProfilePhotoUrl(picture);
+                userRepository.save(user);
+            }
+
+            // Generate JWT
+            org.springframework.security.core.userdetails.UserDetails userDetails =
+                    org.springframework.security.core.userdetails.User.builder()
+                            .username(user.getEmail())
+                            .password(user.getPassword())
+                            .roles(user.getRole().name())
+                            .build();
+            String token = jwtUtils.generateToken(userDetails);
+
+            return toAuthResponse(user, token);
+
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BadRequestException("Google login failed: " + e.getMessage());
+        }
     }
 
     

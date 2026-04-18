@@ -44,6 +44,13 @@ public class EmailService {
         }
     }
 
+    // ── Direct email — full HTML already built, bypasses wrap() ──────────────
+    // Use for password reset where content has no % format specifiers
+    @Async
+    public void sendPasswordResetEmailDirect(String to, String fullHtml) {
+        send(to, "\uD83D\uDD11 Password Reset \u2014 HK PG Akurdi", fullHtml);
+    }
+
     // ── Email wrapper ─────────────────────────────────────────────────────────
     private String wrap(String content) {
         return """

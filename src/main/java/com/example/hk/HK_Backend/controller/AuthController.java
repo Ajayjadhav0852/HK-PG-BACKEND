@@ -54,8 +54,6 @@ public class AuthController {
             throw new com.example.hk.HK_Backend.exception.BadRequestException("Email is required");
         }
         authService.sendPasswordResetEmail(email.trim().toLowerCase());
-        // Always return success (don't reveal if email exists)
-        return ResponseEntity.ok(ApiResponse.ok("If this email is registered, you will receive reset instructions.", null));
+        return ResponseEntity.ok(ApiResponse.ok("If this email is registered, you will receive reset instructions shortly.", null));
     }
-
-    }
+}

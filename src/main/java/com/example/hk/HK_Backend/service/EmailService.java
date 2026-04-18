@@ -63,6 +63,13 @@ public class EmailService {
         send(to, subject, wrap(contentHtml));
     }
 
+    // ── Direct email — bypasses wrap() to avoid String.formatted() issues ─────
+    // Use this when the full HTML is already built (no %s placeholders)
+    @Async
+    public void sendPasswordResetEmailDirect(String to, String fullHtml) {
+        send(to, "🔑 Password Reset — HK PG Akurdi", fullHtml);
+    }
+
     // ── Email wrapper ─────────────────────────────────────────────────────────
     private String wrap(String content) {
         return """

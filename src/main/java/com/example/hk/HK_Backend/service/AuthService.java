@@ -177,7 +177,8 @@ public class AuthService {
     }
 
     // ── Forgot Password — sends reset email ───────────────────────────────────
-    public void sendPasswordResetEmail(String email) {
+    public boolean sendPasswordResetEmail(String email) {
+        final boolean[] emailSent = {false};
         // Find user — if not found, silently return (don't reveal existence)
         userRepository.findByEmail(email).ifPresent(user -> {
             // Generate a temporary password
@@ -185,31 +186,47 @@ public class AuthService {
             user.setPassword(passwordEncoder.encode(tempPassword));
             userRepository.save(user);
 
-            // Send email with temp password
-            String content = """
-                <h2 style="margin:0 0 6px;color:#1a1a2e;font-size:22px;font-weight:800;">🔑 Password Reset</h2>
-                <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">You requested a password reset for your HK PG account.</p>
+            log.info("Password reset requested for email: {}", email);
 
-                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:20px;">
-                  <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Your temporary password:</p>
-                  <p style="margin:0;font-family:monospace;font-size:24px;font-weight:900;color:#c026d3;letter-spacing:4px;">%s</p>
-                </div>
+            // Build content WITHOUT calling wrap() — pass raw HTML directly
+            // wrap() uses String.formatted() which breaks if content has % chars
+            String htmlBody = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head><body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
+                + "<div style='max-width:500px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
+                + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:32px;text-align:center;'>"
+                + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='64' height='64' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 12px;'/>"
+                + "<h1 style='margin:0;color:#fff;font-size:22px;font-weight:800;'>HK PG Akurdi</h1>"
+                + "<p style='margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;'>Boys Accommodation · Akurdi, Pune</p>"
+                + "</div>"
+                + "<div style='padding:32px;'>"
+                + "<h2 style='margin:0 0 8px;color:#1a1a2e;font-size:20px;font-weight:800;'>&#128273; Password Reset</h2>"
+                + "<p style='margin:0 0 20px;color:#6b7280;font-size:14px;'>You requested a password reset for your HK PG account.</p>"
+                + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;text-align:center;'>"
+                + "<p style='margin:0 0 8px;color:#6b7280;font-size:13px;'>Your temporary password:</p>"
+                + "<p style='margin:0;font-family:monospace;font-size:26px;font-weight:900;color:#c026d3;letter-spacing:4px;'>" + tempPassword + "</p>"
+                + "</div>"
+                + "<div style='background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px;margin-bottom:16px;'>"
+                + "<p style='margin:0;color:#856404;font-size:13px;font-weight:600;'>&#9888;&#65039; Login with this temporary password and change it immediately from your dashboard.</p>"
+                + "</div>"
+                + "<p style='color:#6b7280;font-size:12px;'>If you did not request this, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
+                + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
+                + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+                + "</div>"
+                + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
+                + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
+                + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;margin:4px;'>&#128172; WhatsApp</a>"
+                + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;margin:4px;'>&#127760; Website</a>"
+                + "<p style='margin:12px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
+                + "</div></div></body></html>";
 
-                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:16px;margin-bottom:20px;">
-                  <p style="margin:0;color:#856404;font-size:13px;font-weight:600;">
-                    ⚠️ Please login with this temporary password and change it immediately from your dashboard.
-                  </p>
-                </div>
-
-                <p style="color:#6b7280;font-size:12px;">If you did not request this, please contact us immediately at 9579828996.</p>
-                """.formatted(tempPassword);
-
-            emailService.sendSimpleEmail(
-                email,
-                "🔑 Password Reset — HK PG Akurdi",
-                content
-            );
+            try {
+                emailService.sendPasswordResetEmailDirect(email, htmlBody);
+                emailSent[0] = true;
+                log.info("Password reset email dispatched for: {}", email);
+            } catch (Exception e) {
+                log.error("Failed to send password reset email to {}: {}", email, e.getMessage(), e);
+            }
         });
+        return emailSent[0];
     }
 
     public void updateAdminPassword(String email, String newPassword) {

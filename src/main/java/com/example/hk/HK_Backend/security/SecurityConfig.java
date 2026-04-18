@@ -78,6 +78,11 @@ public class SecurityConfig {
                 // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()
 
+                // Rent payments
+                .requestMatchers(HttpMethod.POST, "/api/rent/submit").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/rent/confirm").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/rent/confirm").permitAll()
+
                 // Admin
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

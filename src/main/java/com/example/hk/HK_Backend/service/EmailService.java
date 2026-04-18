@@ -281,4 +281,114 @@ public class EmailService {
              "🎉 Booking Confirmed — HK PG Akurdi | " + app.getRoomTypeTitle() + " · Bed " + app.getBedNumber(),
              wrap(content));
     }
+
+    // ── 3. Email to ADMIN when student submits rent payment ───────────────────
+    @Async
+    public void sendRentPaymentToAdmin(
+            String adminTo, String studentName, String studentEmail,
+            String bedNumber, String roomNumber, String roomType,
+            String amount, String month, String screenshotUrl, String siteUrl) {
+
+        // Build confirm URL — admin clicks this to mark payment received
+        String confirmUrl = siteUrl + "/api/rent/confirm"
+            + "?studentEmail=" + java.net.URLEncoder.encode(studentEmail, java.nio.charset.StandardCharsets.UTF_8)
+            + "&studentName="  + java.net.URLEncoder.encode(studentName,  java.nio.charset.StandardCharsets.UTF_8)
+            + "&bedNumber="    + java.net.URLEncoder.encode(bedNumber,    java.nio.charset.StandardCharsets.UTF_8)
+            + "&roomType="     + java.net.URLEncoder.encode(roomType,     java.nio.charset.StandardCharsets.UTF_8)
+            + "&amount="       + java.net.URLEncoder.encode(amount,       java.nio.charset.StandardCharsets.UTF_8)
+            + "&month="        + java.net.URLEncoder.encode(month,        java.nio.charset.StandardCharsets.UTF_8);
+
+        String screenshotHtml = (screenshotUrl != null && !screenshotUrl.isBlank())
+            ? "<div style='margin-bottom:20px;text-align:center;'>"
+              + "<p style='margin:0 0 8px;color:#374151;font-size:13px;font-weight:600;'>📸 Payment Screenshot:</p>"
+              + "<a href='" + screenshotUrl + "' target='_blank'>"
+              + "<img src='" + screenshotUrl + "' alt='Payment Screenshot' style='max-width:100%;border-radius:12px;border:2px solid #e2e8f0;'/>"
+              + "</a></div>"
+            : "<p style='color:#9ca3af;font-size:13px;'>No screenshot uploaded.</p>";
+
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
+            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
+            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
+            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
+            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
+            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
+            + "</div>"
+            + "<div style='padding:28px;'>"
+            + "<h2 style='margin:0 0 6px;color:#1a1a2e;font-size:20px;font-weight:800;'>&#128176; Rent Payment Received</h2>"
+            + "<p style='margin:0 0 20px;color:#6b7280;font-size:14px;'>A student has submitted their monthly rent payment.</p>"
+            + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;'>"
+            + "<table width='100%' cellpadding='0' cellspacing='0'>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;width:40%;'>Student Name</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + studentName + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Email</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + studentEmail + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Room Type</td><td style='padding:6px 0;color:#c026d3;font-size:13px;font-weight:700;'>" + roomType + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Room Number</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + roomNumber + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Bed Number</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>Bed " + bedNumber + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Month</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + month + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Amount</td><td style='padding:6px 0;color:#16a34a;font-size:14px;font-weight:700;'>&#8377;" + amount + "</td></tr>"
+            + "</table></div>"
+            + screenshotHtml
+            + "<div style='text-align:center;margin-top:24px;'>"
+            + "<a href='" + confirmUrl + "' style='display:inline-block;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;'>&#9989; Mark Payment as Received</a>"
+            + "<p style='margin:10px 0 0;color:#9ca3af;font-size:12px;'>Click above to send confirmation email to student</p>"
+            + "</div>"
+            + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:24px 0;'/>"
+            + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+            + "</div>"
+            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
+            + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
+            + "<a href='" + siteUrl + "' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
+            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
+            + "</div></div></body></html>";
+
+        send(adminTo, "&#128176; Rent Payment — " + studentName + " | Bed " + bedNumber + " | " + month, html);
+    }
+
+    // ── 4. Email to STUDENT when admin confirms rent payment ──────────────────
+    @Async
+    public void sendRentConfirmationToStudent(
+            String studentEmail, String studentName,
+            String bedNumber, String roomType, String amount, String month) {
+
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
+            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
+            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
+            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
+            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
+            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
+            + "</div>"
+            + "<div style='padding:28px;'>"
+            + "<div style='text-align:center;margin-bottom:20px;'>"
+            + "<div style='font-size:52px;'>&#9989;</div>"
+            + "<h2 style='margin:8px 0 4px;color:#15803d;font-size:22px;font-weight:800;'>Payment Received!</h2>"
+            + "<p style='margin:0;color:#16a34a;font-size:14px;'>Thank you for paying your rent on time.</p>"
+            + "</div>"
+            + "<div style='background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;margin-bottom:20px;'>"
+            + "<table width='100%' cellpadding='0' cellspacing='0'>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;width:40%;'>Student</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + studentName + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Room Type</td><td style='padding:6px 0;color:#c026d3;font-size:13px;font-weight:700;'>" + roomType + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Bed Number</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>Bed " + bedNumber + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Month</td><td style='padding:6px 0;color:#1a1a2e;font-size:13px;font-weight:600;'>" + month + "</td></tr>"
+            + "<tr><td style='padding:6px 0;color:#6b7280;font-size:13px;'>Amount</td><td style='padding:6px 0;color:#16a34a;font-size:14px;font-weight:700;'>&#8377;" + amount + "</td></tr>"
+            + "</table></div>"
+            + "<div style='background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;'>"
+            + "<p style='margin:0 0 6px;color:#f472b6;font-size:15px;font-weight:700;'>\"Live Comfortably. Achieve Your Goals.\"</p>"
+            + "<p style='margin:0;color:rgba(255,255,255,0.7);font-size:13px;'>Thank you for staying with us. We appreciate your timely payment.</p>"
+            + "</div>"
+            + "<div style='background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px;margin-bottom:20px;'>"
+            + "<p style='margin:0;color:#92400e;font-size:13px;font-weight:600;'>&#128204; Always pay rent through the HK PG application only.</p>"
+            + "</div>"
+            + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+            + "</div>"
+            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
+            + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
+            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
+            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
+            + "</div></div></body></html>";
+
+        send(studentEmail, "&#9989; Rent Payment Confirmed — HK PG Akurdi | " + month, html);
+    }
 }

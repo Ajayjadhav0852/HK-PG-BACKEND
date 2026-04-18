@@ -46,4 +46,16 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Google login successful", authService.googleLogin(token)));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isBlank()) {
+            throw new com.example.hk.HK_Backend.exception.BadRequestException("Email is required");
+        }
+        authService.sendPasswordResetEmail(email.trim().toLowerCase());
+        // Always return success (don't reveal if email exists)
+        return ResponseEntity.ok(ApiResponse.ok("If this email is registered, you will receive reset instructions.", null));
+    }
+
     }

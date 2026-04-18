@@ -44,6 +44,12 @@ public class EmailService {
         }
     }
 
+    // ── Public simple email (for password reset etc.) ─────────────────────────
+    @Async
+    public void sendSimpleEmail(String to, String subject, String contentHtml) {
+        send(to, subject, wrap(contentHtml));
+    }
+
     // ── Email wrapper ─────────────────────────────────────────────────────────
     private String wrap(String content) {
         return """

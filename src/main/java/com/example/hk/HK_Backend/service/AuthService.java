@@ -36,6 +36,7 @@ public class AuthService {
     private final PasswordEncoder       passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils              jwtUtils;
+    private final EmailService          emailService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -173,6 +174,42 @@ public class AuthService {
         // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    // ── Forgot Password — sends reset email ───────────────────────────────────
+    public void sendPasswordResetEmail(String email) {
+        // Find user — if not found, silently return (don't reveal existence)
+        userRepository.findByEmail(email).ifPresent(user -> {
+            // Generate a temporary password
+            String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8);
+            user.setPassword(passwordEncoder.encode(tempPassword));
+            userRepository.save(user);
+
+            // Send email with temp password
+            String content = """
+                <h2 style="margin:0 0 6px;color:#1a1a2e;font-size:22px;font-weight:800;">🔑 Password Reset</h2>
+                <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">You requested a password reset for your HK PG account.</p>
+
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:20px;">
+                  <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Your temporary password:</p>
+                  <p style="margin:0;font-family:monospace;font-size:24px;font-weight:900;color:#c026d3;letter-spacing:4px;">%s</p>
+                </div>
+
+                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:16px;margin-bottom:20px;">
+                  <p style="margin:0;color:#856404;font-size:13px;font-weight:600;">
+                    ⚠️ Please login with this temporary password and change it immediately from your dashboard.
+                  </p>
+                </div>
+
+                <p style="color:#6b7280;font-size:12px;">If you did not request this, please contact us immediately at 9579828996.</p>
+                """.formatted(tempPassword);
+
+            emailService.sendSimpleEmail(
+                email,
+                "🔑 Password Reset — HK PG Akurdi",
+                content
+            );
+        });
     }
 
     public void updateAdminPassword(String email, String newPassword) {

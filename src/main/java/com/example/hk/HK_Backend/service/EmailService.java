@@ -21,24 +21,11 @@ public class EmailService {
     @Value("${spring.mail.username:hkpgakurdi@gmail.com}")
     private String fromEmail;
 
-    @Value("${spring.mail.password:}")
-    private String mailPassword;
-
     @Value("${app.admin.email:admin@hkpg.com}")
     private String adminEmail;
 
     @Value("${app.site.url:https://hk-pg-akurdi.vercel.app}")
     private String siteUrl;
-
-    // ── Startup check — logs clearly if MAIL_PASSWORD is missing ─────────────
-    @jakarta.annotation.PostConstruct
-    public void checkMailConfig() {
-        if (mailPassword == null || mailPassword.isBlank()) {
-            log.error("⚠️  MAIL_PASSWORD env var is NOT SET — all emails will fail! Set it on Render dashboard.");
-        } else {
-            log.info("✅ Mail config OK — from: {}, admin: {}", fromEmail, adminEmail);
-        }
-    }
 
     // ── Send email helper ─────────────────────────────────────────────────────
     private void send(String to, String subject, String html) {
@@ -50,24 +37,11 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(msg);
-            log.info("✅ Email sent to {}: {}", to, subject);
+            log.info("Email sent to {}: {}", to, subject);
         } catch (Exception e) {
-            // Log full stack trace so Render logs show the real cause
-            log.error("❌ Email FAILED to {} | subject: {} | error: {}", to, subject, e.getMessage(), e);
+            log.warn("Email failed to {}: {}", to, e.getMessage());
+            // Never fail the main flow due to email issues
         }
-    }
-
-    // ── Public simple email (for password reset etc.) ─────────────────────────
-    @Async
-    public void sendSimpleEmail(String to, String subject, String contentHtml) {
-        send(to, subject, wrap(contentHtml));
-    }
-
-    // ── Direct email — bypasses wrap() to avoid String.formatted() issues ─────
-    // Use this when the full HTML is already built (no %s placeholders)
-    @Async
-    public void sendPasswordResetEmailDirect(String to, String fullHtml) {
-        send(to, "🔑 Password Reset — HK PG Akurdi", fullHtml);
     }
 
     // ── Email wrapper ─────────────────────────────────────────────────────────
@@ -85,13 +59,12 @@ public class EmailService {
                 <tr><td align="center">
                   <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%%;">
 
-                    <!-- Header with Logo -->
+                    <!-- Header -->
                     <tr>
                       <td style="background:linear-gradient(135deg,#d63384,#c026d3);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
-                        <img src="https://hk-pg-akurdi.vercel.app/hkpg-logo.png"
-                             alt="HK PG Logo"
-                             width="72" height="72"
-                             style="border-radius:50%%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 14px;object-fit:cover;" />
+                        <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:50%%;padding:12px;margin-bottom:12px;">
+                          <span style="font-size:36px;">🏠</span>
+                        </div>
                         <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">HK PG Akurdi</h1>
                         <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;">Boys Accommodation · Near Akurdi Railway Station, Pune</p>
                       </td>
@@ -106,46 +79,15 @@ public class EmailService {
 
                     <!-- Footer -->
                     <tr>
-                      <td style="background:#1a1a2e;border-radius:0 0 16px 16px;padding:28px 40px;text-align:center;">
-                        <p style="margin:0 0 6px;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;">HK PG Akurdi — Boys Accommodation</p>
-                        <p style="margin:0 0 6px;color:rgba(255,255,255,0.6);font-size:12px;">📍 Near Gurudwara, Akurdi Railway Station, Pune – 411035</p>
-                        <p style="margin:0 0 16px;color:rgba(255,255,255,0.6);font-size:12px;">
+                      <td style="background:#1a1a2e;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+                        <p style="margin:0 0 8px;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;">HK PG Akurdi — Boys Accommodation</p>
+                        <p style="margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;">📍 Near Gurudwara, Akurdi Railway Station, Pune – 411035</p>
+                        <p style="margin:0 0 12px;color:rgba(255,255,255,0.6);font-size:12px;">
                           📞 <a href="tel:9579828996" style="color:#f472b6;text-decoration:none;">9579828996</a> &nbsp;|&nbsp;
                           📞 <a href="tel:9096398032" style="color:#f472b6;text-decoration:none;">9096398032</a>
                         </p>
-
-                        <!-- Social Media Links -->
-                        <p style="margin:0 0 10px;color:rgba(255,255,255,0.7);font-size:12px;font-weight:600;">Follow us &amp; stay connected:</p>
-                        <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
-                          <tr>
-                            <!-- Instagram -->
-                            <td style="padding:0 6px;">
-                              <a href="https://www.instagram.com/hkpg.akurdi" target="_blank"
-                                 style="display:inline-block;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;">
-                                📸 Instagram
-                              </a>
-                            </td>
-                            <!-- WhatsApp -->
-                            <td style="padding:0 6px;">
-                              <a href="https://wa.me/919579828996" target="_blank"
-                                 style="display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;">
-                                💬 WhatsApp
-                              </a>
-                            </td>
-                            <!-- Website -->
-                            <td style="padding:0 6px;">
-                              <a href="%s" target="_blank"
-                                 style="display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;">
-                                🌐 Website
-                              </a>
-                            </td>
-                          </tr>
-                        </table>
-
-                        <p style="margin:0 0 4px;color:rgba(255,255,255,0.35);font-size:11px;font-style:italic;">
-                          NOTE: This is an auto-generated mail sent from our online system. Please do not reply to this email.
-                        </p>
-                        <p style="margin:0;color:rgba(255,255,255,0.3);font-size:11px;">© 2026 HK PG Akurdi. All rights reserved.</p>
+                        <a href="%s" style="display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:12px;font-weight:700;">Visit Website</a>
+                        <p style="margin:16px 0 0;color:rgba(255,255,255,0.4);font-size:11px;">© 2026 HK PG Akurdi. All rights reserved.</p>
                       </td>
                     </tr>
 
@@ -291,26 +233,34 @@ public class EmailService {
               </table>
             </div>
 
-            <!-- Deposit Note -->
-            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin-bottom:20px;">
-              <p style="margin:0;color:#dc2626;font-size:13px;font-weight:700;">
-                ⚠️ NOTE: Deposit once paid is NON-REFUNDABLE.
-              </p>
+            <!-- What to bring -->
+            <div style="background:linear-gradient(135deg,#fff0f6,#fdf3e7);border:1px solid #fce7f3;border-radius:12px;padding:24px;margin-bottom:24px;">
+              <h3 style="margin:0 0 14px;color:#374151;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">📋 What to Bring on Joining Day</h3>
+              <ul style="margin:0;padding-left:20px;color:#4b5563;font-size:13px;line-height:2;">
+                <li>Original ID proof (Aadhaar / PAN / Passport)</li>
+                <li>2 passport size photographs</li>
+                <li>Remaining rent amount (first month)</li>
+                <li>Guardian contact details</li>
+              </ul>
             </div>
 
             <!-- Motivational Message -->
             <div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
               <p style="margin:0 0 8px;color:#f472b6;font-size:16px;font-weight:700;">"Live Comfortably. Achieve Your Goals."</p>
               <p style="margin:0;color:rgba(255,255,255,0.7);font-size:13px;line-height:1.6;">
-                Welcome to HK PG — your home away from home. We are committed to providing you a safe, comfortable, and supportive environment so you can focus on what matters most.
+                Welcome to HK PG — your home away from home. We're committed to providing you a safe, comfortable, and supportive environment so you can focus on what matters most.
               </p>
             </div>
 
-            <!-- Thanks & Regards -->
-            <p style="margin:0 0 4px;color:#374151;font-size:13px;line-height:1.8;">
-              Thanks &amp; Regards,<br/>
-              <strong style="color:#c026d3;font-size:14px;">HK PG MANAGEMENT</strong><br/>
-              <span style="color:#6b7280;font-size:12px;">HK PG Akurdi, Pune</span>
+            <!-- Contact -->
+            <div style="text-align:center;">
+              <p style="margin:0 0 12px;color:#374151;font-size:13px;font-weight:600;">Need help? Contact us anytime:</p>
+              <a href="tel:9579828996" style="display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;margin:4px;">📞 9579828996</a>
+              <a href="https://wa.me/919579828996" style="display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;margin:4px;">💬 WhatsApp</a>
+            </div>
+
+            <p style="margin:24px 0 0;text-align:center;color:#9ca3af;font-size:12px;font-style:italic;">
+              Thank you for choosing HK PG Akurdi. Have a wonderful stay! 🏠
             </p>
             """.formatted(
                 app.getRoomTypeTitle() != null ? app.getRoomTypeTitle() : "—",

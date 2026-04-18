@@ -377,7 +377,7 @@ public class EmailService {
             + "<p style='margin:0;color:rgba(255,255,255,0.7);font-size:13px;'>Thank you for staying with us. We appreciate your timely payment.</p>"
             + "</div>"
             + "<div style='background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px;margin-bottom:20px;'>"
-            + "<p style='margin:0;color:#92400e;font-size:13px;font-weight:600;'>&#128204; Always pay rent through the HK PG application only.</p>"
+            + "<p style='margin:0;color:#92400e;font-size:13px;font-weight:600;'>&#128204; Always pay rent through the HK PG website only.</p>"
             + "</div>"
             + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
             + "</div>"

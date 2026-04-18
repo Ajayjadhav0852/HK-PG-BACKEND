@@ -21,11 +21,24 @@ public class EmailService {
     @Value("${spring.mail.username:hkpgakurdi@gmail.com}")
     private String fromEmail;
 
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
     @Value("${app.admin.email:admin@hkpg.com}")
     private String adminEmail;
 
     @Value("${app.site.url:https://hk-pg-akurdi.vercel.app}")
     private String siteUrl;
+
+    // ── Startup check — logs clearly if MAIL_PASSWORD is missing ─────────────
+    @jakarta.annotation.PostConstruct
+    public void checkMailConfig() {
+        if (mailPassword == null || mailPassword.isBlank()) {
+            log.error("⚠️  MAIL_PASSWORD env var is NOT SET — all emails will fail! Set it on Render dashboard.");
+        } else {
+            log.info("✅ Mail config OK — from: {}, admin: {}", fromEmail, adminEmail);
+        }
+    }
 
     // ── Send email helper ─────────────────────────────────────────────────────
     private void send(String to, String subject, String html) {
@@ -37,10 +50,10 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(msg);
-            log.info("Email sent to {}: {}", to, subject);
+            log.info("✅ Email sent to {}: {}", to, subject);
         } catch (Exception e) {
-            log.warn("Email failed to {}: {}", to, e.getMessage());
-            // Never fail the main flow due to email issues
+            // Log full stack trace so Render logs show the real cause
+            log.error("❌ Email FAILED to {} | subject: {} | error: {}", to, subject, e.getMessage(), e);
         }
     }
 

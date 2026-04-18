@@ -11,6 +11,7 @@ import com.example.hk.HK_Backend.security.JwtUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,7 +26,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+@Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -74,35 +77,46 @@ public class AuthService {
 
     // ── Google OAuth Login ────────────────────────────────────────────────────
     @Transactional
-    public AuthResponse googleLogin(String googleToken) {
+    public AuthResponse googleLogin(String accessToken) {
         try {
-            // Verify Google token by calling Google's tokeninfo endpoint
+            // Use access_token to get user info from Google userinfo endpoint
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create("https://oauth2.googleapis.com/tokeninfo?id_token=" + googleToken))
+                    .uri(URI.create("https://www.googleapis.com/oauth2/v3/userinfo"))
+                    .header("Authorization", "Bearer " + accessToken)
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new BadRequestException("Invalid Google token");
+                throw new BadRequestException("Could not verify Google account. Please try again.");
             }
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode json = mapper.readTree(response.body());
 
-            String email = json.get("email").asText();
-            String name  = json.has("name") ? json.get("name").asText() : email.split("@")[0];
+            String email   = json.has("email")   ? json.get("email").asText()   : null;
+            String name    = json.has("name")    ? json.get("name").asText()    : null;
             String picture = json.has("picture") ? json.get("picture").asText() : null;
 
+            if (email == null || email.isBlank()) {
+                throw new BadRequestException("Google account does not have an email address.");
+            }
+
+            if (name == null || name.isBlank()) {
+                name = email.split("@")[0];
+            }
+
             // Find or create user
+            final String finalName = name;
+            final String finalPicture = picture;
             User user = userRepository.findByEmail(email).orElseGet(() -> {
                 User newUser = User.builder()
-                        .name(name)
+                        .name(finalName)
                         .email(email)
                         .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
                         .role(Role.STUDENT)
-                        .profilePhotoUrl(picture)
+                        .profilePhotoUrl(finalPicture)
                         .active(true)
                         .build();
                 return userRepository.save(newUser);
@@ -114,7 +128,7 @@ public class AuthService {
                 userRepository.save(user);
             }
 
-            // Generate JWT
+            // Generate JWT using UserDetails
             org.springframework.security.core.userdetails.UserDetails userDetails =
                     org.springframework.security.core.userdetails.User.builder()
                             .username(user.getEmail())
@@ -128,7 +142,8 @@ public class AuthService {
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            throw new BadRequestException("Google login failed: " + e.getMessage());
+            log.error("Google login error: {}", e.getMessage());
+            throw new BadRequestException("Google login failed. Please try again.");
         }
     }
 

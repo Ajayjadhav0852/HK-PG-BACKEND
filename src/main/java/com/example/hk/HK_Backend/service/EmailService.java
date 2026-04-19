@@ -282,7 +282,95 @@ public class EmailService {
              wrap(content));
     }
 
-    // ── 3. Email to ADMIN when student submits rent payment ───────────────────
+    // ── 3. Email to STUDENT on booking status change (REJECTED / PENDING) ────
+    @Async
+    public void sendBookingStatusEmail(String to, String name, String status, String roomType, String bedNumber) {
+        if (to == null || to.isBlank()) return;
+        boolean isRejected = "REJECTED".equals(status);
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
+            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
+            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
+            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
+            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
+            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
+            + "</div>"
+            + "<div style='padding:28px;'>"
+            + "<div style='text-align:center;margin-bottom:20px;'>"
+            + "<div style='font-size:48px;'>" + (isRejected ? "❌" : "🔄") + "</div>"
+            + "<h2 style='margin:8px 0 4px;color:" + (isRejected ? "#dc2626" : "#d97706") + ";font-size:20px;font-weight:800;'>Booking " + (isRejected ? "Rejected" : "Status Updated") + "</h2>"
+            + "</div>"
+            + "<p style='color:#374151;font-size:14px;'>Dear <strong>" + name + "</strong>,</p>"
+            + "<p style='color:#6b7280;font-size:13px;line-height:1.6;'>"
+            + (isRejected
+                ? "We regret to inform you that your booking application has been <strong style='color:#dc2626;'>rejected</strong> by the admin. If you have any questions, please contact us directly."
+                : "Your booking application status has been updated to <strong style='color:#d97706;'>Pending</strong>. Our team will review it shortly.")
+            + "</p>"
+            + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:16px 0;'>"
+            + "<p style='margin:0 0 6px;color:#6b7280;font-size:12px;'>Room Type: <strong>" + roomType + "</strong></p>"
+            + "<p style='margin:0;color:#6b7280;font-size:12px;'>Bed Number: <strong>Bed " + bedNumber + "</strong></p>"
+            + "</div>"
+            + "<p style='color:#374151;font-size:13px;'>For any queries, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
+            + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
+            + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+            + "</div>"
+            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
+            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
+            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
+            + "</div></div></body></html>";
+        send(to, (isRejected ? "❌" : "🔄") + " Booking Status Update — HK PG Akurdi", html);
+    }
+
+    // ── 4. Email to STUDENT on payment status change (deposit/rent) ───────────
+    @Async
+    public void sendPaymentStatusEmail(String to, String name, String paymentType, String status, String roomType, String bedNumber) {
+        if (to == null || to.isBlank()) return;
+        boolean isReceived = "RECEIVED".equals(status);
+        boolean isOverdue  = "OVERDUE".equals(status);
+        String emoji = isReceived ? "✅" : isOverdue ? "🔴" : "⏳";
+        String color = isReceived ? "#16a34a" : isOverdue ? "#dc2626" : "#d97706";
+        String message = isReceived
+            ? "Your <strong>" + paymentType + "</strong> payment has been <strong style='color:#16a34a;'>received and confirmed</strong> by the admin. Thank you for paying on time!"
+            : isOverdue
+            ? "Your <strong>" + paymentType + "</strong> payment is <strong style='color:#dc2626;'>overdue</strong>. Please pay immediately to avoid any inconvenience."
+            : "Your <strong>" + paymentType + "</strong> payment status is <strong style='color:#d97706;'>pending</strong>. Please complete your payment at the earliest.";
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
+            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
+            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
+            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
+            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
+            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
+            + "</div>"
+            + "<div style='padding:28px;'>"
+            + "<div style='text-align:center;margin-bottom:20px;'>"
+            + "<div style='font-size:48px;'>" + emoji + "</div>"
+            + "<h2 style='margin:8px 0 4px;color:" + color + ";font-size:20px;font-weight:800;'>" + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + "</h2>"
+            + "</div>"
+            + "<p style='color:#374151;font-size:14px;'>Dear <strong>" + name + "</strong>,</p>"
+            + "<p style='color:#6b7280;font-size:13px;line-height:1.6;'>" + message + "</p>"
+            + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:16px 0;'>"
+            + "<p style='margin:0 0 6px;color:#6b7280;font-size:12px;'>Payment Type: <strong>" + paymentType + "</strong></p>"
+            + "<p style='margin:0 0 6px;color:#6b7280;font-size:12px;'>Room Type: <strong>" + roomType + "</strong></p>"
+            + "<p style='margin:0;color:#6b7280;font-size:12px;'>Bed Number: <strong>Bed " + bedNumber + "</strong></p>"
+            + "</div>"
+            + (isReceived ? "<div style='background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;margin-bottom:16px;'>"
+                + "<p style='margin:0;color:#15803d;font-size:13px;font-weight:600;'>&#128204; Always pay rent through the HK PG application only.</p>"
+                + "</div>" : "")
+            + "<p style='color:#374151;font-size:13px;'>For any queries, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
+            + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
+            + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+            + "</div>"
+            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
+            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
+            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
+            + "</div></div></body></html>";
+        send(to, emoji + " " + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + " — HK PG Akurdi", html);
+    }
+
+    // ── 5. Email to ADMIN when student submits rent payment ───────────────────
     @Async
     public void sendRentPaymentToAdmin(
             String adminTo, String studentName, String studentEmail,

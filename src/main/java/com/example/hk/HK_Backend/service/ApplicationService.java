@@ -180,6 +180,9 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id));
 
         // ── Update payment statuses if provided ───────────────────────────────
+        boolean depositChanged = req.getDepositStatus() != null && req.getDepositStatus() != app.getDepositStatus();
+        boolean rentChanged    = req.getRentStatus()    != null && req.getRentStatus()    != app.getRentStatus();
+
         if (req.getDepositStatus() != null) {
             app.setDepositStatus(req.getDepositStatus());
         }
@@ -192,7 +195,24 @@ public class ApplicationService {
             // Only payment status update — save and return
             if (req.getAdminNotes() != null) app.setAdminNotes(req.getAdminNotes());
             applicationRepository.save(app);
-            return toResponse(app);
+            ApplicationResponse response = toResponse(app);
+            // Send email for payment status changes
+            String studentEmail = app.getEmail();
+            if (studentEmail != null && !studentEmail.isBlank()) {
+                if (depositChanged) {
+                    emailService.sendPaymentStatusEmail(studentEmail, app.getFullName(),
+                        "Deposit", req.getDepositStatus().name(),
+                        app.getRoomType() != null ? app.getRoomType().getTitle() : "—",
+                        app.getBedNumber() != null ? String.valueOf(app.getBedNumber()) : "—");
+                }
+                if (rentChanged) {
+                    emailService.sendPaymentStatusEmail(studentEmail, app.getFullName(),
+                        "Monthly Rent", req.getRentStatus().name(),
+                        app.getRoomType() != null ? app.getRoomType().getTitle() : "—",
+                        app.getBedNumber() != null ? String.valueOf(app.getBedNumber()) : "—");
+                }
+            }
+            return response;
         }
 
         ApplicationStatus oldStatus = app.getStatus();
@@ -242,6 +262,12 @@ public class ApplicationService {
         ApplicationResponse response = toResponse(app);
         if (newStatus == ApplicationStatus.CONFIRMED) {
             emailService.sendConfirmationToStudent(response);
+        } else if (newStatus == ApplicationStatus.REJECTED) {
+            emailService.sendBookingStatusEmail(response.getEmail(), response.getFullName(),
+                "REJECTED", response.getRoomTypeTitle(), response.getBedNumber() != null ? String.valueOf(response.getBedNumber()) : "—");
+        } else if (newStatus == ApplicationStatus.PENDING) {
+            emailService.sendBookingStatusEmail(response.getEmail(), response.getFullName(),
+                "PENDING", response.getRoomTypeTitle(), response.getBedNumber() != null ? String.valueOf(response.getBedNumber()) : "—");
         }
         return response;
     }

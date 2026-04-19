@@ -43,4 +43,7 @@ public class ApplicationResponse {
     private String adminNotes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    // Payment statuses
+    private com.example.hk.HK_Backend.entity.PaymentStatus depositStatus;
+    private com.example.hk.HK_Backend.entity.PaymentStatus rentStatus;
 }

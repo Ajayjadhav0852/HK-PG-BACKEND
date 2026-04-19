@@ -153,6 +153,20 @@ public class Application {
     @Builder.Default
     private ApplicationStatus status = ApplicationStatus.PENDING;
 
+    /** Deposit payment status: PENDING / RECEIVED / NOT_REQUIRED */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deposit_status", length = 20)
+    @Builder.Default
+    private com.example.hk.HK_Backend.entity.PaymentStatus depositStatus
+        = com.example.hk.HK_Backend.entity.PaymentStatus.PENDING;
+
+    /** Monthly rent payment status: PENDING / RECEIVED / OVERDUE */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rent_status", length = 20)
+    @Builder.Default
+    private com.example.hk.HK_Backend.entity.PaymentStatus rentStatus
+        = com.example.hk.HK_Backend.entity.PaymentStatus.PENDING;
+
     @Column(name = "admin_notes", columnDefinition = "TEXT")
     private String adminNotes;
 

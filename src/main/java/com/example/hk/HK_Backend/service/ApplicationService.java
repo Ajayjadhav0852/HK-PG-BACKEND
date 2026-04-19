@@ -179,6 +179,22 @@ public class ApplicationService {
         Application app = applicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id));
 
+        // ── Update payment statuses if provided ───────────────────────────────
+        if (req.getDepositStatus() != null) {
+            app.setDepositStatus(req.getDepositStatus());
+        }
+        if (req.getRentStatus() != null) {
+            app.setRentStatus(req.getRentStatus());
+        }
+
+        // ── Update booking status if provided ─────────────────────────────────
+        if (req.getStatus() == null) {
+            // Only payment status update — save and return
+            if (req.getAdminNotes() != null) app.setAdminNotes(req.getAdminNotes());
+            applicationRepository.save(app);
+            return toResponse(app);
+        }
+
         ApplicationStatus oldStatus = app.getStatus();
         ApplicationStatus newStatus = req.getStatus();
 
@@ -219,15 +235,11 @@ public class ApplicationService {
             }
         }
 
-        // PENDING → REJECTED: no bed change (bed was never occupied)
-        // REJECTED → PENDING: no bed change
-
         app.setStatus(newStatus);
         app.setAdminNotes(req.getAdminNotes());
         applicationRepository.save(app);
         
         ApplicationResponse response = toResponse(app);
-        // Send confirmation email to student when admin confirms (async)
         if (newStatus == ApplicationStatus.CONFIRMED) {
             emailService.sendConfirmationToStudent(response);
         }
@@ -319,6 +331,8 @@ public class ApplicationService {
                 .adminNotes(a.getAdminNotes())
                 .createdAt(a.getCreatedAt())
                 .updatedAt(a.getUpdatedAt())
+                .depositStatus(a.getDepositStatus())
+                .rentStatus(a.getRentStatus())
                 .build();
     }
 }

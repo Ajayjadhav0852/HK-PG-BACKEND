@@ -75,6 +75,9 @@ public class SecurityConfig {
                 // Health check — keep-alive ping, no auth needed
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
+                // Gallery — public read, admin write
+                .requestMatchers(HttpMethod.GET, "/api/gallery/**").permitAll()
+
                 // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()
 

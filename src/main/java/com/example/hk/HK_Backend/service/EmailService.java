@@ -51,59 +51,72 @@ public class EmailService {
         send(to, "\uD83D\uDD11 Password Reset \u2014 HK PG Akurdi", fullHtml);
     }
 
-    // ── Email wrapper ─────────────────────────────────────────────────────────
+    // ── Shared header HTML (used by inline-built emails) ─────────────────────
+    private static final String EMAIL_HEADER =
+        "<!DOCTYPE html><html><head><meta charset='UTF-8'/><meta name='viewport' content='width=device-width,initial-scale=1.0'/></head>"
+        + "<body style='margin:0;padding:0;background:#f4f4f8;font-family:Segoe UI,Arial,sans-serif;'>"
+        + "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f8;padding:30px 0;'>"
+        + "<tr><td align='center'>"
+        + "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;'>"
+        // Logo header
+        + "<tr><td style='background:#1a1a2e;border-radius:16px 16px 0 0;padding:0;text-align:center;'>"
+        + "<img src='https://res.cloudinary.com/dqveipmse/image/upload/v1734970827/hkpg-email-header_lfqwxe.png' "
+        + "alt='HK PG - Boys PG Accommodation' "
+        + "style='width:100%;max-width:600px;height:auto;display:block;border-radius:16px 16px 0 0;'/>"
+        + "</td></tr>"
+        // Content area open
+        + "<tr><td style='background:#ffffff;padding:32px 36px;'>";
+
+    private String emailFooter() {
+        return "</td></tr>"
+            + "<tr><td style='background:#1a1a2e;border-radius:0 0 16px 16px;padding:28px 36px;text-align:center;'>"
+            + "<p style='margin:0 0 6px;color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;'>HK PG Akurdi</p>"
+            + "<p style='margin:0 0 16px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune &#8211; 411035</p>"
+            + "<div style='margin:0 0 16px;'>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg' alt='WhatsApp' width='36' height='36' style='border-radius:8px;'/>"
+            + "</a>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png' alt='Instagram' width='36' height='36' style='border-radius:8px;'/>"
+            + "</a>"
+            + "<a href='" + siteUrl + "' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/8/8e/Antu_internet-web-browser.svg' alt='Website' width='36' height='36' style='border-radius:8px;'/>"
+            + "</a>"
+            + "</div>"
+            + "<p style='margin:0;color:rgba(255,255,255,0.4);font-size:11px;'>&#169; 2026 HK PG Akurdi. All rights reserved.</p>"
+            + "</td></tr>"
+            + "</table></td></tr></table>"
+            + "</body></html>";
+    }
+    // ── Email wrapper (used by emails 1 & 2 which use text blocks) ───────────
     private String wrap(String content) {
-        return """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-              <title>HK PG Akurdi</title>
-            </head>
-            <body style="margin:0;padding:0;background:#f4f4f8;font-family:'Segoe UI',Arial,sans-serif;">
-              <table width="100%%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:30px 0;">
-                <tr><td align="center">
-                  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%%;">
-
-                    <!-- Header -->
-                    <tr>
-                      <td style="background:linear-gradient(135deg,#d63384,#c026d3);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
-                        <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:50%%;padding:12px;margin-bottom:12px;">
-                          <span style="font-size:36px;">🏠</span>
-                        </div>
-                        <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">HK PG Akurdi</h1>
-                        <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;">Boys Accommodation · Near Akurdi Railway Station, Pune</p>
-                      </td>
-                    </tr>
-
-                    <!-- Content -->
-                    <tr>
-                      <td style="background:#ffffff;padding:36px 40px;">
-                        %s
-                      </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                      <td style="background:#1a1a2e;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
-                        <p style="margin:0 0 8px;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;">HK PG Akurdi — Boys Accommodation</p>
-                        <p style="margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;">📍 Near Gurudwara, Akurdi Railway Station, Pune – 411035</p>
-                        <p style="margin:0 0 12px;color:rgba(255,255,255,0.6);font-size:12px;">
-                          📞 <a href="tel:9579828996" style="color:#f472b6;text-decoration:none;">9579828996</a> &nbsp;|&nbsp;
-                          📞 <a href="tel:9096398032" style="color:#f472b6;text-decoration:none;">9096398032</a>
-                        </p>
-                        <a href="%s" style="display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:12px;font-weight:700;">Visit Website</a>
-                        <p style="margin:16px 0 0;color:rgba(255,255,255,0.4);font-size:11px;">© 2026 HK PG Akurdi. All rights reserved.</p>
-                      </td>
-                    </tr>
-
-                  </table>
-                </td></tr>
-              </table>
-            </body>
-            </html>
-            """.formatted(content, siteUrl);
+        return "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'/><meta name='viewport' content='width=device-width,initial-scale=1.0'/><title>HK PG Akurdi</title></head>"
+            + "<body style='margin:0;padding:0;background:#f4f4f8;font-family:Segoe UI,Arial,sans-serif;'>"
+            + "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f8;padding:30px 0;'>"
+            + "<tr><td align='center'>"
+            + "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;'>"
+            + "<tr><td style='background:#1a1a2e;border-radius:16px 16px 0 0;padding:0;text-align:center;'>"
+            + "<img src='https://res.cloudinary.com/dqveipmse/image/upload/v1734970827/hkpg-email-header_lfqwxe.png' "
+            + "alt='HK PG - Boys PG Accommodation' "
+            + "style='width:100%;max-width:600px;height:auto;display:block;border-radius:16px 16px 0 0;'/>"
+            + "</td></tr>"
+            + "<tr><td style='background:#ffffff;padding:36px 40px;'>"
+            + content
+            + "</td></tr>"
+            + "<tr><td style='background:#1a1a2e;border-radius:0 0 16px 16px;padding:28px 36px;text-align:center;'>"
+            + "<p style='margin:0 0 6px;color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;'>HK PG Akurdi</p>"
+            + "<p style='margin:0 0 16px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune &#8211; 411035</p>"
+            + "<div style='margin:0 0 16px;'>"
+            + "<a href='https://wa.me/919579828996' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg' alt='WhatsApp' width='36' height='36' style='border-radius:8px;'/></a>"
+            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png' alt='Instagram' width='36' height='36' style='border-radius:8px;'/></a>"
+            + "<a href='" + siteUrl + "' style='display:inline-block;margin:0 6px;'>"
+            + "<img src='https://upload.wikimedia.org/wikipedia/commons/8/8e/Antu_internet-web-browser.svg' alt='Website' width='36' height='36' style='border-radius:8px;'/></a>"
+            + "</div>"
+            + "<p style='margin:0;color:rgba(255,255,255,0.4);font-size:11px;'>&#169; 2026 HK PG Akurdi. All rights reserved.</p>"
+            + "</td></tr>"
+            + "</table></td></tr></table></body></html>";
     }
 
     // ── 1. Email to ADMIN when student submits application ────────────────────
@@ -287,17 +300,10 @@ public class EmailService {
     public void sendBookingStatusEmail(String to, String name, String status, String roomType, String bedNumber) {
         if (to == null || to.isBlank()) return;
         boolean isRejected = "REJECTED".equals(status);
-        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
-            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
-            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
-            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
-            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
-            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
-            + "</div>"
-            + "<div style='padding:28px;'>"
+        String html = EMAIL_HEADER
             + "<div style='text-align:center;margin-bottom:20px;'>"
-            + "<div style='font-size:48px;'>" + (isRejected ? "❌" : "🔄") + "</div>"
-            + "<h2 style='margin:8px 0 4px;color:" + (isRejected ? "#dc2626" : "#d97706") + ";font-size:20px;font-weight:800;'>Booking " + (isRejected ? "Rejected" : "Status Updated") + "</h2>"
+            + "<div style='font-size:52px;'>" + (isRejected ? "&#10060;" : "&#128260;") + "</div>"
+            + "<h2 style='margin:8px 0 4px;color:" + (isRejected ? "#dc2626" : "#d97706") + ";font-size:22px;font-weight:800;'>Booking " + (isRejected ? "Rejected" : "Status Updated") + "</h2>"
             + "</div>"
             + "<p style='color:#374151;font-size:14px;'>Dear <strong>" + name + "</strong>,</p>"
             + "<p style='color:#6b7280;font-size:13px;line-height:1.6;'>"
@@ -312,13 +318,7 @@ public class EmailService {
             + "<p style='color:#374151;font-size:13px;'>For any queries, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
             + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
             + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
-            + "</div>"
-            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
-            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
-            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
-            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
-            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
-            + "</div></div></body></html>";
+            + emailFooter();
         send(to, (isRejected ? "❌" : "🔄") + " Booking Status Update — HK PG Akurdi", html);
     }
 
@@ -328,24 +328,17 @@ public class EmailService {
         if (to == null || to.isBlank()) return;
         boolean isReceived = "RECEIVED".equals(status);
         boolean isOverdue  = "OVERDUE".equals(status);
-        String emoji = isReceived ? "✅" : isOverdue ? "🔴" : "⏳";
+        String emoji = isReceived ? "&#9989;" : isOverdue ? "&#128308;" : "&#9203;";
         String color = isReceived ? "#16a34a" : isOverdue ? "#dc2626" : "#d97706";
         String message = isReceived
             ? "Your <strong>" + paymentType + "</strong> payment has been <strong style='color:#16a34a;'>received and confirmed</strong> by the admin. Thank you for paying on time!"
             : isOverdue
             ? "Your <strong>" + paymentType + "</strong> payment is <strong style='color:#dc2626;'>overdue</strong>. Please pay immediately to avoid any inconvenience."
             : "Your <strong>" + paymentType + "</strong> payment status is <strong style='color:#d97706;'>pending</strong>. Please complete your payment at the earliest.";
-        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
-            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
-            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
-            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
-            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
-            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
-            + "</div>"
-            + "<div style='padding:28px;'>"
+        String html = EMAIL_HEADER
             + "<div style='text-align:center;margin-bottom:20px;'>"
-            + "<div style='font-size:48px;'>" + emoji + "</div>"
-            + "<h2 style='margin:8px 0 4px;color:" + color + ";font-size:20px;font-weight:800;'>" + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + "</h2>"
+            + "<div style='font-size:52px;'>" + emoji + "</div>"
+            + "<h2 style='margin:8px 0 4px;color:" + color + ";font-size:22px;font-weight:800;'>" + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + "</h2>"
             + "</div>"
             + "<p style='color:#374151;font-size:14px;'>Dear <strong>" + name + "</strong>,</p>"
             + "<p style='color:#6b7280;font-size:13px;line-height:1.6;'>" + message + "</p>"
@@ -360,14 +353,8 @@ public class EmailService {
             + "<p style='color:#374151;font-size:13px;'>For any queries, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
             + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
             + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
-            + "</div>"
-            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
-            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
-            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
-            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
-            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
-            + "</div></div></body></html>";
-        send(to, emoji + " " + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + " — HK PG Akurdi", html);
+            + emailFooter();
+        send(to, (isReceived ? "✅" : isOverdue ? "🔴" : "⏳") + " " + paymentType + " Payment " + (isReceived ? "Confirmed" : isOverdue ? "Overdue" : "Pending") + " — HK PG Akurdi", html);
     }
 
     // ── 5. Email to ADMIN when student submits rent payment ───────────────────
@@ -394,14 +381,7 @@ public class EmailService {
               + "</a></div>"
             : "<p style='color:#9ca3af;font-size:13px;'>No screenshot uploaded.</p>";
 
-        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
-            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
-            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
-            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
-            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
-            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
-            + "</div>"
-            + "<div style='padding:28px;'>"
+        String html = EMAIL_HEADER
             + "<h2 style='margin:0 0 6px;color:#1a1a2e;font-size:20px;font-weight:800;'>&#128176; Rent Payment Received</h2>"
             + "<p style='margin:0 0 20px;color:#6b7280;font-size:14px;'>A student has submitted their monthly rent payment.</p>"
             + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;'>"
@@ -421,14 +401,7 @@ public class EmailService {
             + "</div>"
             + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:24px 0;'/>"
             + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
-            + "</div>"
-            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
-            + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
-            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
-            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
-            + "<a href='" + siteUrl + "' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
-            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
-            + "</div></div></body></html>";
+            + emailFooter();
 
         send(adminTo, "&#128176; Rent Payment — " + studentName + " | Bed " + bedNumber + " | " + month, html);
     }
@@ -439,14 +412,7 @@ public class EmailService {
             String studentEmail, String studentName,
             String bedNumber, String roomType, String amount, String month) {
 
-        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head>"
-            + "<body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
-            + "<div style='max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
-            + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:28px;text-align:center;'>"
-            + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='60' height='60' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 10px;'/>"
-            + "<h1 style='margin:0;color:#fff;font-size:20px;font-weight:800;'>HK PG Akurdi</h1>"
-            + "</div>"
-            + "<div style='padding:28px;'>"
+        String html = EMAIL_HEADER
             + "<div style='text-align:center;margin-bottom:20px;'>"
             + "<div style='font-size:52px;'>&#9989;</div>"
             + "<h2 style='margin:8px 0 4px;color:#15803d;font-size:22px;font-weight:800;'>Payment Received!</h2>"
@@ -468,14 +434,7 @@ public class EmailService {
             + "<p style='margin:0;color:#92400e;font-size:13px;font-weight:600;'>&#128204; Always pay rent through the HK PG website only.</p>"
             + "</div>"
             + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
-            + "</div>"
-            + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
-            + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
-            + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128248; Instagram</a>"
-            + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#128172; WhatsApp</a>"
-            + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;margin:3px;'>&#127760; Website</a>"
-            + "<p style='margin:10px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
-            + "</div></div></body></html>";
+            + emailFooter();
 
         send(studentEmail, "&#9989; Rent Payment Confirmed — HK PG Akurdi | " + month, html);
     }

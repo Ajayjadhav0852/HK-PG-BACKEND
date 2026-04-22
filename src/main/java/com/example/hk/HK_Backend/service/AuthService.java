@@ -190,14 +190,17 @@ public class AuthService {
 
             // Build content WITHOUT calling wrap() — pass raw HTML directly
             // wrap() uses String.formatted() which breaks if content has % chars
-            String htmlBody = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head><body style='font-family:Arial,sans-serif;background:#f4f4f8;padding:30px;'>"
-                + "<div style='max-width:500px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);'>"
-                + "<div style='background:linear-gradient(135deg,#d63384,#c026d3);padding:32px;text-align:center;'>"
-                + "<img src='https://hk-pg-akurdi.vercel.app/hkpg-logo.png' width='64' height='64' style='border-radius:50%;border:3px solid rgba(255,255,255,0.4);display:block;margin:0 auto 12px;'/>"
-                + "<h1 style='margin:0;color:#fff;font-size:22px;font-weight:800;'>HK PG Akurdi</h1>"
-                + "<p style='margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;'>Boys Accommodation · Akurdi, Pune</p>"
-                + "</div>"
-                + "<div style='padding:32px;'>"
+            String htmlBody = "<!DOCTYPE html><html><head><meta charset='UTF-8'/></head><body style='margin:0;padding:0;background:#f4f4f8;font-family:Segoe UI,Arial,sans-serif;'>"
+                + "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f8;padding:30px 0;'><tr><td align='center'>"
+                + "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;'>"
+                // HD Logo header
+                + "<tr><td style='background:#1a1a2e;border-radius:16px 16px 0 0;padding:0;text-align:center;'>"
+                + "<img src='https://res.cloudinary.com/dqveipmse/image/upload/v1734970827/hkpg-email-header_lfqwxe.png' "
+                + "alt='HK PG - Boys PG Accommodation' "
+                + "style='width:100%;max-width:600px;height:auto;display:block;border-radius:16px 16px 0 0;'/>"
+                + "</td></tr>"
+                // Content
+                + "<tr><td style='background:#fff;padding:32px 36px;'>"
                 + "<h2 style='margin:0 0 8px;color:#1a1a2e;font-size:20px;font-weight:800;'>&#128273; Password Reset</h2>"
                 + "<p style='margin:0 0 20px;color:#6b7280;font-size:14px;'>You requested a password reset for your HK PG account.</p>"
                 + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;text-align:center;'>"
@@ -210,13 +213,26 @@ public class AuthService {
                 + "<p style='color:#6b7280;font-size:12px;'>If you did not request this, contact us at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a></p>"
                 + "<hr style='border:none;border-top:1px solid #f1f5f9;margin:20px 0;'/>"
                 + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+                + "</td></tr>"
+                // Footer with icon-only social links
+                + "<tr><td style='background:#1a1a2e;border-radius:0 0 16px 16px;padding:28px 36px;text-align:center;'>"
+                + "<p style='margin:0 0 6px;color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;'>HK PG Akurdi</p>"
+                + "<p style='margin:0 0 16px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune &#8211; 411035</p>"
+                + "<div style='margin:0 0 16px;'>"
+                + "<a href='https://wa.me/919579828996' style='display:inline-block;margin:0 6px;'>"
+                + "<img src='https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg' alt='WhatsApp' width='36' height='36' style='border-radius:8px;'/>"
+                + "</a>"
+                + "<a href='https://www.instagram.com/hkpg.akurdi' style='display:inline-block;margin:0 6px;'>"
+                + "<img src='https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png' alt='Instagram' width='36' height='36' style='border-radius:8px;'/>"
+                + "</a>"
+                + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;margin:0 6px;'>"
+                + "<img src='https://upload.wikimedia.org/wikipedia/commons/8/8e/Antu_internet-web-browser.svg' alt='Website' width='36' height='36' style='border-radius:8px;'/>"
+                + "</a>"
                 + "</div>"
-                + "<div style='background:#1a1a2e;padding:20px;text-align:center;'>"
-                + "<p style='margin:0 0 8px;color:rgba(255,255,255,0.6);font-size:12px;'>&#128205; Near Gurudwara, Akurdi Railway Station, Pune</p>"
-                + "<a href='https://wa.me/919579828996' style='display:inline-block;background:#25d366;color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;margin:4px;'>&#128172; WhatsApp</a>"
-                + "<a href='https://hk-pg-akurdi.vercel.app' style='display:inline-block;background:linear-gradient(135deg,#d63384,#c026d3);color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;margin:4px;'>&#127760; Website</a>"
-                + "<p style='margin:12px 0 0;color:rgba(255,255,255,0.35);font-size:11px;'>NOTE: Auto-generated mail. Do not reply.</p>"
-                + "</div></div></body></html>";
+                + "<p style='margin:0;color:rgba(255,255,255,0.4);font-size:11px;'>&#169; 2026 HK PG Akurdi. All rights reserved.</p>"
+                + "</td></tr>"
+                + "</table></td></tr></table>"
+                + "</body></html>";
 
             try {
                 emailService.sendPasswordResetEmailDirect(email, htmlBody);

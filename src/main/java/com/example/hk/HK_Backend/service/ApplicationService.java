@@ -180,8 +180,10 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id));
 
         // ── Update payment statuses if provided ───────────────────────────────
-        boolean depositChanged = req.getDepositStatus() != null && req.getDepositStatus() != app.getDepositStatus();
-        boolean rentChanged    = req.getRentStatus()    != null && req.getRentStatus()    != app.getRentStatus();
+        boolean depositChanged = req.getDepositStatus() != null
+                && (app.getDepositStatus() == null || !req.getDepositStatus().name().equals(app.getDepositStatus().name()));
+        boolean rentChanged    = req.getRentStatus()    != null
+                && (app.getRentStatus()    == null || !req.getRentStatus().name().equals(app.getRentStatus().name()));
 
         if (req.getDepositStatus() != null) {
             app.setDepositStatus(req.getDepositStatus());

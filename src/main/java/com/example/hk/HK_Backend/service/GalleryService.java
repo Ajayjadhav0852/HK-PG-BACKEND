@@ -22,7 +22,8 @@ public class GalleryService {
     private final FileStorageService fileStorageService;
 
     private static final Set<String> VALID_SECTIONS = Set.of(
-            "outdoor", "indoor", "rooms", "balcony", "terrace", "bathrooms", "common"
+            "outdoor", "indoor", "rooms", "balcony", "terrace", "bathrooms", "common",
+            "1-sharing", "2-sharing", "3-sharing", "4-sharing", "parking"
     );
 
     public List<GalleryImageDto> getAllImages() {

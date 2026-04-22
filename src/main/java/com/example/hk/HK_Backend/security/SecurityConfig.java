@@ -107,9 +107,10 @@ public class SecurityConfig {
         // Use allowedOriginPatterns for wildcard support
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
+                "https://hk-pg-akurdi.vercel.app",       // Production domain
                 "https://hk-pg-frontend.vercel.app",
-                "https://hk-pg-frontend-*.vercel.app",  // Preview deployments
-                "https://*.vercel.app"                   // Any Vercel domain
+                "https://hk-pg-frontend-*.vercel.app",   // Preview deployments
+                "https://*.vercel.app"                    // Any Vercel domain
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

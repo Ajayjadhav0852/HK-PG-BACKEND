@@ -77,6 +77,8 @@ public class SecurityConfig {
 
                 // Gallery — public read, admin write
                 .requestMatchers(HttpMethod.GET, "/api/gallery/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/gallery/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/gallery/**").hasRole("ADMIN")
 
                 // Applications
                 .requestMatchers(HttpMethod.POST, "/api/applications").authenticated()

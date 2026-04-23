@@ -48,6 +48,17 @@ public class GalleryController {
         return ResponseEntity.ok(ApiResponse.ok("Image uploaded successfully", dto));
     }
 
+    @Operation(summary = "Save a Cloudinary URL (Admin only — frontend uploads directly to Cloudinary)", security = @SecurityRequirement(name = "BearerAuth"))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/url")
+    public ResponseEntity<ApiResponse<GalleryImageDto>> saveImageUrl(
+            @RequestBody com.example.hk.HK_Backend.dto.GalleryUrlRequest req) {
+        GalleryImageDto dto = galleryService.saveImageUrl(
+                req.getImageUrl(), req.getSection(),
+                req.getCaption(), req.getDisplayOrder());
+        return ResponseEntity.ok(ApiResponse.ok("Image saved successfully", dto));
+    }
+
     @Operation(summary = "Delete a gallery image (Admin only)", security = @SecurityRequirement(name = "BearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")

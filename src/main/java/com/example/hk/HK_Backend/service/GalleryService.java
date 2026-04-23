@@ -55,6 +55,25 @@ public class GalleryService {
         return toDto(saved);
     }
 
+    /** Save a Cloudinary URL that was uploaded directly from the frontend */
+    public GalleryImageDto saveImageUrl(String imageUrl, String section, String caption, Integer displayOrder) {
+        validateSection(section);
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new BadRequestException("imageUrl is required");
+        }
+
+        GalleryImage image = GalleryImage.builder()
+                .imageUrl(imageUrl.trim())
+                .section(section)
+                .caption(caption != null ? caption.trim() : "")
+                .displayOrder(displayOrder != null ? displayOrder : 0)
+                .build();
+
+        GalleryImage saved = galleryImageRepository.save(image);
+        log.info("Gallery image URL saved: section={}, url={}", section, imageUrl);
+        return toDto(saved);
+    }
+
     public void deleteImage(Long id) {
         GalleryImage image = galleryImageRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Gallery image not found with id: " + id));

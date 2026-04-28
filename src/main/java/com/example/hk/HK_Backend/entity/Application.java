@@ -178,4 +178,22 @@ public class Application {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ── Soft-delete / History ─────────────────────────────────────────────────
+    /** When admin soft-deletes — record kept permanently, just hidden from active view */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    /** When student actually vacated the PG */
+    @Column(name = "vacated_at")
+    private LocalDate vacatedAt;
+
+    /** True once the 7-day Google Review reminder email has been sent */
+    @Column(name = "google_review_email_sent")
+    @Builder.Default
+    private Boolean googleReviewEmailSent = false;
+
+    /** Monthly price at time of booking — preserved even if room price changes later */
+    @Column(name = "monthly_price", precision = 10, scale = 2)
+    private BigDecimal monthlyPrice;
 }

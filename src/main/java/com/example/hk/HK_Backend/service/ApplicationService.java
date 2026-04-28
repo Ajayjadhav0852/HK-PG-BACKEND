@@ -276,7 +276,8 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> getAllApplications() {
-        return applicationRepository.findAllByOrderByCreatedAtDesc()
+        // Admin sees all non-deleted applications
+        return applicationRepository.findByDeletedAtIsNullOrderByCreatedAtDesc()
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -284,7 +285,8 @@ public class ApplicationService {
     public List<ApplicationResponse> getMyApplications(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
-        return applicationRepository.findByUserOrderByCreatedAtDesc(user)
+        // Student sees only their non-deleted applications
+        return applicationRepository.findByUserAndDeletedAtIsNullOrderByCreatedAtDesc(user)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -294,20 +296,25 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id)));
     }
 
+    /**
+     * Soft-delete: marks deletedAt timestamp, frees the bed if CONFIRMED.
+     * Record is NEVER physically deleted — preserved permanently for history.
+     */
     @Transactional
     public void deleteApplication(Long id) {
         Application app = applicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id));
 
-        // Only free the bed if the application was CONFIRMED
-        // (PENDING apps never occupied a bed)
+        // Free the bed if CONFIRMED
         if (app.getStatus() == ApplicationStatus.CONFIRMED && app.getRoom() != null) {
             roomRepository.decrementOccupiedBeds(app.getRoom().getId());
-            log.info("Bed freed on delete: {} (application {})", app.getRoom().getRoomNumber(), id);
+            log.info("Bed freed on soft-delete: {} (application {})", app.getRoom().getRoomNumber(), id);
         }
 
-        applicationRepository.delete(app);
-        log.info("Application {} deleted", id);
+        // Soft-delete — record stays in DB forever
+        app.setDeletedAt(java.time.LocalDateTime.now());
+        applicationRepository.save(app);
+        log.info("Application {} soft-deleted (record preserved)", id);
     }
 
     @Transactional

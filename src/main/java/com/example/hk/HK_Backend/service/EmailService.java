@@ -16,7 +16,7 @@ import jakarta.mail.internet.MimeMessage;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final JavaMailSender mailSender; 
 
     @Value("${spring.mail.username:hkpgakurdi@gmail.com}")
     private String fromEmail;
@@ -422,5 +422,31 @@ public class EmailService {
             + emailFooter();
 
         send(studentEmail, "&#9989; Rent Payment Confirmed — HK PG Akurdi | " + month, html);
+    }
+
+    // ── 5. Google Review Reminder — sent 7 days after joining ─────────────────
+    @Async
+    public void sendGoogleReviewReminder(String to, String name, String roomType) {
+        if (to == null || to.isBlank()) return;
+        String html = EMAIL_HEADER
+            + "<div style='text-align:center;margin-bottom:24px;'>"
+            + "<div style='font-size:52px;margin-bottom:8px;'>&#11088;</div>"
+            + "<h2 style='margin:0 0 6px;color:#1a1a2e;font-size:22px;font-weight:800;'>How's Your Stay?</h2>"
+            + "<p style='margin:0;color:#6b7280;font-size:14px;'>We hope you're settling in well at HK PG Akurdi!</p>"
+            + "</div>"
+            + "<p style='color:#374151;font-size:14px;'>Dear <strong>" + name + "</strong>,</p>"
+            + "<p style='color:#6b7280;font-size:13px;line-height:1.7;'>It's been a week since you joined us in <strong>" + roomType + "</strong>. We hope you're comfortable and enjoying your stay.</p>"
+            + "<p style='color:#6b7280;font-size:13px;line-height:1.7;'>If you're happy with your experience, we'd truly appreciate a quick Google review — it helps other students find a safe and comfortable home like yours.</p>"
+            + "<div style='text-align:center;margin:28px 0;'>"
+            + "<a href='https://g.page/r/hkpg-akurdi/review' style='display:inline-block;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;'>&#11088; Write a Google Review</a>"
+            + "<p style='margin:10px 0 0;color:#9ca3af;font-size:12px;'>Takes less than 1 minute — means a lot to us!</p>"
+            + "</div>"
+            + "<div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;'>"
+            + "<p style='margin:0;color:#374151;font-size:13px;font-weight:600;'>&#128204; Any issues or suggestions?</p>"
+            + "<p style='margin:6px 0 0;color:#6b7280;font-size:13px;'>Contact us anytime at <a href='tel:9579828996' style='color:#c026d3;'>9579828996</a> — we're here to help.</p>"
+            + "</div>"
+            + "<p style='margin:0;color:#374151;font-size:13px;'>Thanks &amp; Regards,<br/><strong style='color:#c026d3;'>HK PG MANAGEMENT</strong></p>"
+            + emailFooter();
+        send(to, "&#11088; How's Your Stay? — HK PG Akurdi", html);
     }
 }

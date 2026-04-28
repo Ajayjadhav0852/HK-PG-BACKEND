@@ -5,8 +5,10 @@ import lombok.Data;
 
 @Data @Builder
 public class DashboardStatsDto {
-    /** Active students = PENDING + CONFIRMED applications (not deleted/rejected) */
+    /** Currently active confirmed students (not vacated, not deleted) */
     private long totalStudents;
+    /** Total students who ever lived here (all-time, including vacated) */
+    private long totalStudentsEver;
     /** Total registered user accounts with STUDENT role */
     private long registeredStudents;
     private long pendingApplications;

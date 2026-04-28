@@ -22,16 +22,15 @@ public class AdminService {
         long confirmed = applicationRepository.countByStatus(ApplicationStatus.CONFIRMED);
         long rejected  = applicationRepository.countByStatus(ApplicationStatus.REJECTED);
 
-        // Active Students = ONLY CONFIRMED applications
-        // (students whose booking is confirmed by admin)
-        // When all rejected/deleted → 0
-        long activeStudents = confirmed;
+        long currentlyActive   = applicationRepository.countCurrentlyActive();
+        long totalStudentsEver = applicationRepository.countTotalStudentsEver();
 
         int totalBeds    = roomRepository.sumAllTotalBeds();
         int occupiedBeds = roomRepository.sumAllOccupiedBeds();
 
         return DashboardStatsDto.builder()
-                .totalStudents(activeStudents)
+                .totalStudents(currentlyActive)
+                .totalStudentsEver(totalStudentsEver)
                 .pendingApplications(pending)
                 .confirmedApplications(confirmed)
                 .rejectedApplications(rejected)

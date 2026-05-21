@@ -29,30 +29,34 @@ public class GoogleReviewScheduler {
     @Scheduled(cron = "0 30 4 * * *")
     @Transactional
     public void sendGoogleReviewReminders() {
-        // Target: students whose joining date was exactly 7 days ago
-        LocalDate targetDate = LocalDate.now().minusDays(7);
-        List<Application> candidates = applicationRepository.findConfirmedForGoogleReview(targetDate);
+        try {
+            LocalDate targetDate = LocalDate.now().minusDays(7);
+            List<Application> candidates = applicationRepository.findConfirmedForGoogleReview(targetDate);
 
-        if (candidates.isEmpty()) {
-            log.debug("[GoogleReview] No review reminders to send today (target date: {})", targetDate);
-            return;
-        }
-
-        log.info("[GoogleReview] Sending review reminders to {} student(s) (joined: {})", candidates.size(), targetDate);
-
-        for (Application app : candidates) {
-            try {
-                emailService.sendGoogleReviewReminder(
-                    app.getEmail(),
-                    app.getFullName(),
-                    app.getRoomType() != null ? app.getRoomType().getTitle() : "your room"
-                );
-                app.setGoogleReviewEmailSent(true);
-                applicationRepository.save(app);
-                log.info("[GoogleReview] Sent to {} ({})", app.getFullName(), app.getEmail());
-            } catch (Exception e) {
-                log.warn("[GoogleReview] Failed for {} ({}): {}", app.getFullName(), app.getEmail(), e.getMessage());
+            if (candidates.isEmpty()) {
+                log.debug("[GoogleReview] No review reminders to send today (target date: {})", targetDate);
+                return;
             }
+
+            log.info("[GoogleReview] Sending review reminders to {} student(s) (joined: {})", candidates.size(), targetDate);
+
+            for (Application app : candidates) {
+                try {
+                    emailService.sendGoogleReviewReminder(
+                        app.getEmail(),
+                        app.getFullName(),
+                        app.getRoomType() != null ? app.getRoomType().getTitle() : "your room"
+                    );
+                    app.setGoogleReviewEmailSent(true);
+                    applicationRepository.save(app);
+                    log.info("[GoogleReview] Sent to {} ({})", app.getFullName(), app.getEmail());
+                } catch (Exception e) {
+                    log.warn("[GoogleReview] Failed for {} ({}): {}", app.getFullName(), app.getEmail(), e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            // Never crash the app due to scheduler failure
+            log.warn("[GoogleReview] Scheduler error (non-fatal): {}", e.getMessage());
         }
     }
 }

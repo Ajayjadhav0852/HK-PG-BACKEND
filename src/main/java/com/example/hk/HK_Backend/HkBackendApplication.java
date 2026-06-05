@@ -29,9 +29,10 @@ public class HkBackendApplication {
                                RoomTypeRepository roomTypeRepo,
                                PasswordEncoder encoder) {
         return args -> {
+            // ALL database operations wrapped — app NEVER crashes due to seeding failure
             try {
-                // Seed admin user
-                if (userRepo.findByEmail("admin@hkpg.com").isEmpty()) {
+                boolean adminExists = userRepo.findByEmail("admin@hkpg.com").isPresent();
+                if (!adminExists) {
                     User admin = new User();
                     admin.setName("Admin");
                     admin.setEmail("admin@hkpg.com");
@@ -41,9 +42,13 @@ public class HkBackendApplication {
                     userRepo.save(admin);
                     log.info("Admin user seeded.");
                 }
+            } catch (Exception e) {
+                log.warn("Admin seeding skipped (will retry next restart): {}", e.getMessage());
+            }
 
-                // Seed room types
-                if (roomTypeRepo.count() == 0) {
+            try {
+                long count = roomTypeRepo.count();
+                if (count == 0) {
                     roomTypeRepo.save(buildRoomType("1-sharing", "1 Sharing - Private",
                             "Most Private", new BigDecimal("8500"), new BigDecimal("10000"),
                             "https://res.cloudinary.com/dzr0crkvr/image/upload/w_800,q_auto,f_auto/v1776062518/IMG_20260328_195806.jpg_exlqfb.jpg",
@@ -63,8 +68,7 @@ public class HkBackendApplication {
                     log.info("Room types seeded.");
                 }
             } catch (Exception e) {
-                // Never crash the app due to seeding failure
-                log.warn("Data seeding skipped (non-fatal): {}", e.getMessage());
+                log.warn("Room type seeding skipped (will retry next restart): {}", e.getMessage());
             }
         };
     }

@@ -3,7 +3,7 @@ services:
     name: hk-pg-backend
     runtime: java
     buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -Dspring.profiles.active=prod -jar target/HK_Backend-0.0.1-SNAPSHOT.jar
+    startCommand: java -Xms64m -Xmx400m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -Dspring.profiles.active=prod -jar target/HK_Backend-0.0.1-SNAPSHOT.jar
     healthCheckPath: /api-docs
     envVars:
       - key: SPRING_PROFILES_ACTIVE

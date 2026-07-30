@@ -27,9 +27,15 @@ public class EmailService {
     @Value("${app.site.url:https://hk-pg-akurdi.vercel.app}")
     private String siteUrl;
 
-    // ── Send email helper ─────────────────────────────────────────────────────
+    // ── Send email helper — fault-tolerant, never crashes main app ────────────
     private void send(String to, String subject, String html) {
         try {
+            // Validate email configuration before attempting send
+            if (fromEmail == null || fromEmail.isBlank()) {
+                log.warn("Email sender not configured, skipping email to {}", to);
+                return;
+            }
+            
             MimeMessage msg = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
             helper.setFrom(fromEmail, "HK PG Akurdi");
@@ -37,9 +43,15 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(msg);
-            log.info("Email sent to {}: {}", to, subject);
+            log.info("✅ Email sent successfully to {}: {}", to, subject);
+        } catch (org.springframework.mail.MailAuthenticationException e) {
+            log.error("❌ Email authentication failed - check MAIL_PASSWORD configuration: {}", e.getMessage());
+            // Never fail the main flow due to email issues
+        } catch (org.springframework.mail.MailSendException e) {
+            log.error("❌ Email send failed to {}: {}", to, e.getMessage());
+            // Never fail the main flow due to email issues
         } catch (Exception e) {
-            log.warn("Email failed to {}: {}", to, e.getMessage());
+            log.error("❌ Unexpected email error for {}: {} - {}", to, e.getClass().getSimpleName(), e.getMessage());
             // Never fail the main flow due to email issues
         }
     }
